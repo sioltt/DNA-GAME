@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENETIC LINK: PATERNITY CHALLENGE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Charo&family=Orbitron:wght@400;700&display=swap');
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0b0f19;
+        }
+        /* Custom styling to match the image's dark glass panels */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+        }
+    </style>
+</head>
+<body class="text-gray-200 min-h-screen p-4 flex flex-col justify-between relative overflow-x-hidden">
+
+    <!-- Top Navigation Bar -->
+    <nav class="flex justify-between items-center bg-white text-slate-800 px-6 py-3 shadow-md rounded-lg mb-4">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 border-2 border-cyan-600 rounded-full flex items-center justify-center font-bold text-xs text-cyan-600">🧬</div>
+            <span class="font-bold tracking-wider text-lg text-slate-900">GENETIC LINK: <span class="text-cyan-600 font-medium">PATERNITY CHALLENGE</span></span>
+        </div>
+        <div class="flex space-x-6 text-sm font-semibold text-gray-600">
+            <a href="#" class="hover:text-cyan-600">HOME</a>
+            <a href="#" class="text-cyan-600 border-b-2 border-cyan-600 pb-1">CASES</a>
+            <a href="#" class="hover:text-cyan-600">REPORTS</a>
+            <a href="#" class="hover:text-cyan-600">SETTINGS</a>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Area -->
+    <main class="max-w-7xl mx-auto w-full glass-panel rounded-xl p-6 flex-grow shadow-2xl relative">
+        
+        <!-- Case Header -->
+        <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-6">
+            <div>
+                <span class="text-xs uppercase tracking-widest text-gray-400">ACTIVE CASE:</span>
+                <h2 class="text-xl font-bold text-white tracking-wide" id="case-id">[REDACTED] 2026-F</h2>
+            </div>
+            <div class="bg-amber-500/10 border border-amber-500/40 px-4 py-2 rounded text-right">
+                <span class="text-xs text-amber-400 block uppercase font-bold tracking-wider">SCORE</span>
+                <span class="text-2xl font-bold text-amber-400" id="score-val">0</span>
+            </div>
+        </div>
+
+        <!-- Interactive Playground -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+            
+            <!-- Canvas layer for alignment guide lines -->
+            <canvas id="lineCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none hidden lg:block"></canvas>
+
+            <!-- LEFT COLUMN: CONTROL PROFILE (FATHER) -->
+            <div class="glass-panel rounded-lg p-5 flex flex-col justify-between border-gray-600 z-10">
+                <div>
+                    <div class="border-b border-gray-700 pb-2 mb-4 flex items-center justify-between">
+                        <h3 class="text-sm font-bold tracking-wider uppercase text-cyan-400">Control Profile (Father)</h3>
+                        <span class="text-xs text-gray-500 font-mono" id="father-id">ID: C-F-8812</span>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-6 leading-relaxed">
+                        Analyze the genetic marker bands. The true biological offspring will match exactly <span class="text-cyan-400 font-bold">50%</span> of the control markers.
+                    </p>
+                    
+                    <!-- DNA Gel Image Area -->
+                    <div class="flex justify-center">
+                        <div class="w-32 bg-black border-2 border-gray-700 rounded p-2 h-96 relative flex flex-col justify-around shadow-inner" id="father-gel">
+                            <!-- DNA bands generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 text-center text-xs text-gray-500 font-mono">STATUS: WAITING FOR COMPARISON</div>
+            </div>
+
+            <!-- RIGHT TWO COLUMNS: SUSPECT MATRIX -->
+            <div class="lg:col-span-2 glass-panel rounded-lg p-5 flex flex-col justify-between z-10">
+                <div>
+                    <div class="border-b border-gray-700 pb-2 mb-4">
+                        <h3 class="text-sm font-bold tracking-wider uppercase text-emerald-400">Suspected Childs' Profiles</h3>
+                    </div>
+                    <p id="game-feedback" class="text-sm text-amber-400 h-6 mb-6 font-semibold transition-all duration-300">
+                        Scan the suspect DNA ladders to find the correct 50% marker alignment.
+                    </p>
+
+                    <!-- Suspect Grid -->
+                    <div id="suspects-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Suspect cards generated dynamically here -->
+                    </div>
+                </div>
+
+                <!-- Next Level Trigger -->
+                <div class="mt-8 flex justify-end">
+                    <button onclick="startNewCase()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold tracking-wider text-xs uppercase px-6 py-3 rounded border border-gray-600 transition-all active:scale-95">
+                        Generate Next Case
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-[10px] text-gray-600 font-mono mt-4 uppercase tracking-widest">
+        SYSTEM CONNECTION SECURE // TERMINAL REGION: OH-NORTHEAST
+    </footer>
+
+    <script>
+        // Color palette mimicking the different gel colors from the image
+        const BAND_COLORS = [
+            'linear-gradient(90deg, #1e40af, #3b82f6)', // Bright Blue
+            'linear-gradient(90deg, #065f46, #10b981)', // Neon Green
+            'linear-gradient(90deg, #c2410c, #f97316)', // Vibrant Orange
+            'linear-gradient(90deg, #6b21a8, #a855f7)'  // Intense Purple
+        ];
+
+        let gameScore = 0;
+        let fatherBands = [];
+        let correctIndex = 0;
+
+        function randomBandValue() {
+            return Math.floor(Math.random() * 12) + 1; // 12 distinct positions inside the gel
+        }
+
+        function createGelLayout(bandPositions) {
+            // Generates an array of 12 rows where bands exist or stay empty
+            let html = '';
+            for (let i = 1; i <= 12; i++) {
+                if (bandPositions.includes(i)) {
+                    // Pick a distinct color variant based on the position row index
+                    let color = BAND_COLORS[i % BAND_COLORS.length];
+                    html += `<div class="h-4 w-full rounded-sm opacity-90 shadow-[0_0_8px_rgba(255,255,255,0.2)]" style="background: ${color}"></div>`;
+                } else {
+                    html += `<div class="h-4 w-full opacity-10 border-b border-gray-950/20"></div>`;
+                }
+            }
+            return html;
+        }
+
+        function startNewCase() {
+            // Update UI strings to match a high tech log format
+            document.getElementById('case-id').innerText = `CASE: [REDACTED] 2026-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
+            document.getElementById('father-id').innerText = `ID: C-F-${Math.floor(Math.random() * 8999 + 1000)}`;
+            
+            const feedback = document.getElementById('game-feedback');
+            feedback.innerText = "Target bands locked. Compare alignment profiles below.";
+            feedback.className = "text-sm text-gray-400 h-6 mb-6 font-semibold";
+
+            // 1. Setup Control Father Bands (exactly 4 visual bands)
+            fatherBands = [];
+            while (fatherBands.length < 4) {
+                let pos = randomBandValue();
+                if (!fatherBands.includes(pos)) fatherBands.push(pos);
+            }
+            fatherBands.sort((a,b)=>a-b);
+            document.getElementById('father-gel').innerHTML = createGelLayout(fatherBands);
+
+            // 2. Setup 3 Potential Children (1 correct index)
+            correctIndex = Math.floor(Math.random() * 3);
+            const container = document.getElementById('suspects-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 3; i++) {
+                let childBands = [];
+
+                if (i === correctIndex) {
+                    // Correct Match: Inherits exactly 2 bands from father, 2 are random mutations
+                    let inherited = [...fatherBands].sort(() => 0.5 - Math.random()).slice(0, 2);
+                    childBands = [...inherited];
+                    while (childBands.length < 4) {
+                        let randPos = randomBandValue();
+                        if (!fatherBands.includes(randPos) && !childBands.includes(randPos)) {
+                            childBands.push(randPos);
+                        }
+                    }
+                } else {
+                    // Incorrect Match: Inherits only 1 band or 0 bands from the target father
+                    let inheritedCount = Math.floor(Math.random() * 2); // 0 or 1
+                    let inherited = [...fatherBands].sort(() => 0.5 - Math.random()).slice(0, inheritedCount);
+                    childBands = [...inherited];
+                    while (childBands.length < 4) {
+                        let randPos = randomBandValue();
+                        if (!fatherBands.includes(randPos) && !childBands.includes(randPos)) {
+                            childBands.push(randPos);
+                        }
+                    }
+                }
+                childBands.sort((a,b)=>a-b);
+
+                // Build HTML Card elements matching layout specifications
+                container.innerHTML += `
+                    <div onclick="selectChild(${i})" class="group cursor-pointer bg-black/50 border border-gray-700 hover:border-cyan-500 rounded p-4 flex flex-col items-center transition-all duration-200 transform hover:-translate-y-1 shadow-lg">
+                        <div class="w-full border-b border-gray-800 pb-2 mb-3 flex justify-between text-[11px] font-mono text-gray-500 group-hover:text-cyan-400">
+                            <span>SUSPECT CHILD ${i + 1}</span>
+                            <span>ID: S-C-990${i}</span>
+                        </div>
+                        <div class="w-24 bg-black border border-gray-800 rounded p-1.5 h-72 flex flex-col justify-around shadow-inner">
+                            ${createGelLayout(childBands)}
+                        </div>
+                        <div class="mt-4 w-full bg-gray-800/50 group-hover:bg-cyan-950/40 text-center py-1.5 rounded border border-gray-700 group-hover:border-cyan-800/60 transition-all">
+                            <span class="text-[10px] font-bold tracking-wider text-gray-400 group-hover:text-cyan-300 uppercase">MATCH RATIO?</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Clean/redraw connection visual canvas paths if window sizes match
+            setTimeout(drawConnectionLines, 100);
+        }
+
+        function selectChild(index) {
+            const feedback = document.getElementById('game-feedback');
+            if (index === correctIndex) {
+                gameScore += 200;
+                document.getElementById('score-val').innerText = gameScore;
+                feedback.innerText = "BAND MATCH FOUND! Lineage Level Confirmed. (+200 Score)";
+                feedback.className = "text-sm text-emerald-400 h-6 mb-6 font-bold tracking-wide animate-pulse";
+                setTimeout(startNewCase, 1500);
+            } else {
+                if (gameScore > 0) gameScore -= 50;
+                document.getElementById('score-val').innerText = gameScore;
+                feedback.innerText = "ALIGNMENT ERROR: False positive variant. Match metrics failed.";
+                feedback.className = "text-sm text-rose-500 h-6 mb-6 font-bold tracking-wide";
+            }
+        }
+
+        function drawConnectionLines() {
+            const canvas = document.getElementById('lineCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Clear current viewport maps
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Find visual components 
+            const fatherGel = document.getElementById('father-gel');
+            const targetContainer = document.getElementById('suspects-container');
+            if (!fatherGel || !targetContainer) return;
+
+            const fBounds = fatherGel.getBoundingClientRect();
+            const pBounds = canvas.getBoundingClientRect();
+
+            // Setup a stylish glowing path configuration
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.15)';
+            ctx.lineWidth = 2;
+
+            // Draw clean diagnostic wires running from center right side of control window across the dashboard
+            let startX = fBounds.right - pBounds.left;
+            let startY = fBounds.top - pBounds.top + (fBounds.height / 2);
+            let endX = targetContainer.getBoundingClientRect().left - pBounds.left;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.bezierCurveTo(startX + 100, startY, endX - 100, startY + 50, endX, startY + 20);
+            ctx.stroke();
+        }
+
+        window.onload = startNewCase;
+        window.onresize = drawConnectionLines;
+    </script>
+</body>
+</html>

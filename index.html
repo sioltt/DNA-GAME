@@ -6,239 +6,609 @@
     <title>GENETIC LINK: PATERNITY CHALLENGE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Charo&family=Orbitron:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght=400;700&family=Share+Tech+Mono&display=swap');
         body {
             font-family: 'Orbitron', sans-serif;
             background-color: #0b0f19;
         }
-        /* Custom styling to match the image's dark glass panels */
+        .font-mono-tech {
+            font-family: 'Share Tech Mono', monospace;
+        }
         .glass-panel {
-            background: rgba(17, 24, 39, 0.7);
+            background: rgba(17, 24, 39, 0.75);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(75, 85, 99, 0.4);
+        }
+        .timer-transition {
+            transition: width 0.2s linear, background-color 0.5s ease;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0891b2;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body class="text-gray-200 min-h-screen p-4 flex flex-col justify-between relative overflow-x-hidden">
 
+    <!-- STARTUP DIRECTIONS MODAL -->
+    <div id="directions-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-panel max-w-2xl w-full rounded-xl p-6 border-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+            <div class="flex items-center space-x-3 border-b border-gray-700 pb-3 mb-4">
+                <span class="text-2xl">🧬</span>
+                <h2 class="text-xl font-bold text-cyan-400 tracking-wider">LABORATORY INDUCTION BRIEFING</h2>
+            </div>
+            
+            <div class="space-y-4 text-sm leading-relaxed text-gray-300 font-mono-tech">
+                <p class="text-white text-base">Welcome to the Bio-Forensics Database. Your objective is to verify child lineage via gel electrophoresis matching.</p>
+                
+                <div class="bg-black/40 p-3 rounded border border-gray-800">
+                    <span class="text-amber-400 font-bold block mb-1">📈 MUTATION SCALING ACTIVE:</span>
+                    As your **Laboratory Level** rises, the DNA sequences grow longer, complexity scales up, and extraction windows shrink! Maintain a win streak for score multipliers.
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div class="p-2 bg-gray-900 rounded border border-gray-800">
+                        <span class="text-white font-bold block mb-1">🎮 HOW TO PLAY</span>
+                        1. Analyze the Father's DNA on the left.<br>
+                        2. Cross-reference colors and positions with suspects.<br>
+                        3. Match exactly <span class="text-cyan-400 font-bold">2 rungs</span> before time expires.
+                    </div>
+                    <div class="p-2 bg-gray-900 rounded border border-gray-800">
+                        <span class="text-white font-bold block mb-1">📊 STREAK MULTIPLIERS</span>
+                        Every consecutive correct match increases your multiplier up to <span class="text-amber-400 font-bold">5x Score</span>. A single error resets your streak!
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeDirections()" class="bg-cyan-600 hover:bg-cyan-500 text-black font-bold tracking-widest text-xs uppercase px-6 py-3 rounded shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all active:scale-95">
+                    INITIALIZE TERMINAL
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Top Navigation Bar -->
-    <nav class="flex justify-between items-center bg-white text-slate-800 px-6 py-3 shadow-md rounded-lg mb-4">
+    <nav class="flex justify-between items-center bg-white text-slate-800 px-6 py-3 shadow-md rounded-lg mb-4 z-10">
         <div class="flex items-center space-x-2">
             <div class="w-6 h-6 border-2 border-cyan-600 rounded-full flex items-center justify-center font-bold text-xs text-cyan-600">🧬</div>
-            <span class="font-bold tracking-wider text-lg text-slate-900">GENETIC LINK: <span class="text-cyan-600 font-medium">PATERNITY CHALLENGE</span></span>
+            <span class="font-bold tracking-wider text-sm md:text-lg text-slate-900">GENETIC LINK</span>
         </div>
-        <div class="flex space-x-6 text-sm font-semibold text-gray-600">
-            <a href="#" class="hover:text-cyan-600">HOME</a>
-            <a href="#" class="text-cyan-600 border-b-2 border-cyan-600 pb-1">CASES</a>
-            <a href="#" class="hover:text-cyan-600">REPORTS</a>
-            <a href="#" class="hover:text-cyan-600">SETTINGS</a>
+        <div class="flex space-x-4 md:space-x-6 text-xs md:text-sm font-semibold text-gray-500">
+            <button id="tab-home" onclick="switchTab('home')" class="hover:text-cyan-600 transition-colors">HOME</button>
+            <button id="tab-cases" onclick="switchTab('cases')" class="text-cyan-600 border-b-2 border-cyan-600 pb-1 font-bold">CASES</button>
+            <button id="tab-reports" onclick="switchTab('reports')" class="hover:text-cyan-600 transition-colors">REPORTS</button>
+            <button id="tab-settings" onclick="switchTab('settings')" class="hover:text-cyan-600 transition-colors">SETTINGS</button>
         </div>
     </nav>
 
-    <!-- Main Dashboard Area -->
-    <main class="max-w-7xl mx-auto w-full glass-panel rounded-xl p-6 flex-grow shadow-2xl relative">
-        
-        <!-- Case Header -->
-        <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-6">
-            <div>
-                <span class="text-xs uppercase tracking-widest text-gray-400">ACTIVE CASE:</span>
-                <h2 class="text-xl font-bold text-white tracking-wide" id="case-id">[REDACTED] 2026-F</h2>
+    <!-- TAB 1: HOME PAGE -->
+    <section id="page-home" class="hidden max-w-7xl mx-auto w-full glass-panel rounded-xl p-6 flex-grow shadow-2xl space-y-6">
+        <h2 class="text-xl font-bold text-cyan-400 border-b border-gray-700 pb-2">LABORATORY OVERVIEW</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono-tech">
+            <div class="bg-black/40 border border-gray-800 p-4 rounded-lg">
+                <span class="text-gray-400 block text-xs">OPERATOR STATUS</span>
+                <span id="home-rank" class="text-emerald-400 text-lg font-bold">JUNIOR TECH (LVL 1)</span>
             </div>
-            <div class="bg-amber-500/10 border border-amber-500/40 px-4 py-2 rounded text-right">
-                <span class="text-xs text-amber-400 block uppercase font-bold tracking-wider">SCORE</span>
-                <span class="text-2xl font-bold text-amber-400" id="score-val">0</span>
+            <div class="bg-black/40 border border-gray-800 p-4 rounded-lg">
+                <span class="text-gray-400 block text-xs">CASES ARBITRATED</span>
+                <span id="home-total-cases" class="text-cyan-400 text-2xl font-bold">0</span>
+            </div>
+            <div class="bg-black/40 border border-gray-800 p-4 rounded-lg">
+                <span class="text-gray-400 block text-xs">ACCURACY RATING</span>
+                <span id="home-accuracy" class="text-amber-400 text-2xl font-bold">0%</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 2: ACTIVE GAMEPLAY (CASES) -->
+    <section id="page-cases" class="max-w-7xl mx-auto w-full glass-panel rounded-xl p-6 flex-grow shadow-2xl relative flex flex-col justify-between">
+        <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-2">
+            <div class="flex items-center space-x-4">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-gray-400">ACTIVE CASE:</span>
+                    <h2 class="text-xl font-bold text-white tracking-wide" id="case-id">[REDACTED] 2026-F</h2>
+                </div>
+                <!-- LEVEL BADGE -->
+                <div class="bg-cyan-950 border border-cyan-800 px-3 py-1 rounded text-xs text-cyan-400 font-bold font-mono-tech">
+                    LVL <span id="lvl-badge">1</span>
+                </div>
+            </div>
+            
+            <!-- TRACKING STATS -->
+            <div class="flex space-x-3">
+                <div id="streak-box" class="bg-gray-950 border border-gray-800 px-3 py-2 rounded text-center min-w-[70px] transition-all duration-300">
+                    <span class="text-[9px] text-gray-400 block uppercase tracking-wider">STREAK</span>
+                    <span class="text-base font-bold text-gray-400" id="streak-val">0</span>
+                </div>
+                <div id="score-box" class="bg-amber-500/10 border border-amber-500/40 px-4 py-2 rounded text-right shadow-[0_0_10px_rgba(245,158,11,0)] transition-all duration-300">
+                    <span class="text-xs text-amber-400 block uppercase font-bold tracking-wider" id="score-label">SCORE</span>
+                    <span class="text-2xl font-bold text-amber-400" id="score-val">0</span>
+                </div>
             </div>
         </div>
 
-        <!-- Interactive Playground -->
+        <!-- COUNTDOWN TIMER PROGRESS BAR -->
+        <div class="w-full bg-gray-950 h-3 rounded-full overflow-hidden border border-gray-800 mb-6 relative">
+            <div id="countdown-bar" class="h-full bg-cyan-500 w-full timer-transition shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white tracking-widest font-mono-tech mix-blend-difference" id="timer-text">15s REMAINING</div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
-            
-            <!-- Canvas layer for alignment guide lines -->
             <canvas id="lineCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none hidden lg:block"></canvas>
 
-            <!-- LEFT COLUMN: CONTROL PROFILE (FATHER) -->
-            <div class="glass-panel rounded-lg p-5 flex flex-col justify-between border-gray-600 z-10">
+            <!-- Father Profile + TOOLKIT -->
+            <div class="glass-panel rounded-lg p-5 flex flex-col justify-between border-gray-600 z-10 space-y-6">
                 <div>
                     <div class="border-b border-gray-700 pb-2 mb-4 flex items-center justify-between">
-                        <h3 class="text-sm font-bold tracking-wider uppercase text-cyan-400">Control Profile (Father)</h3>
-                        <span class="text-xs text-gray-500 font-mono" id="father-id">ID: C-F-8812</span>
+                        <h3 class="text-sm font-bold tracking-wider uppercase text-cyan-400">Control Profile</h3>
+                        <span class="text-xs text-gray-500 font-mono-tech" id="father-id">ID: C-F-8812</span>
                     </div>
-                    <p class="text-xs text-gray-400 mb-6 leading-relaxed">
-                        Analyze the genetic marker bands. The true biological offspring will match exactly <span class="text-cyan-400 font-bold">50%</span> of the control markers.
-                    </p>
-                    
-                    <!-- DNA Gel Image Area -->
-                    <div class="flex justify-center">
-                        <div class="w-32 bg-black border-2 border-gray-700 rounded p-2 h-96 relative flex flex-col justify-around shadow-inner" id="father-gel">
-                            <!-- DNA bands generated dynamically -->
-                        </div>
+                    <div class="flex justify-center mb-4">
+                        <div class="w-32 bg-gray-950/90 border-2 border-gray-800 rounded-md p-3 h-64 flex flex-col justify-between shadow-inner" id="father-gel"></div>
                     </div>
                 </div>
-                <div class="mt-6 text-center text-xs text-gray-500 font-mono">STATUS: WAITING FOR COMPARISON</div>
+
+                <!-- UTILITY ACTIONS -->
+                <div class="border-t border-gray-800 pt-4 font-mono-tech space-y-2">
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-cyan-500 block mb-2">Forensic Utility Toolkit</span>
+                    
+                    <button onclick="useEnzymeBurn()" id="btn-burn" class="w-full bg-gray-900 border border-gray-700 hover:border-red-500/50 p-2 rounded flex justify-between items-center text-xs text-gray-400 hover:text-white transition-all">
+                        <span>💥 ENZYME BURN (SKIP)</span>
+                        <span class="text-red-400 font-bold">-50 pts</span>
+                    </button>
+                    
+                    <button onclick="useStabilizer()" id="btn-freeze" class="w-full bg-gray-900 border border-gray-700 hover:border-cyan-500/50 p-2 rounded flex justify-between items-center text-xs text-gray-400 hover:text-white transition-all">
+                        <span>❄️ STRAND STABILIZER</span>
+                        <span class="text-cyan-400 font-bold">-100 pts</span>
+                    </button>
+                    
+                    <button onclick="useLocusIsolation()" id="btn-filter" class="w-full bg-gray-900 border border-gray-700 hover:border-emerald-500/50 p-2 rounded flex justify-between items-center text-xs text-gray-400 hover:text-white transition-all">
+                        <span>🔍 LOCUS ISOLATION (50/50)</span>
+                        <span class="text-emerald-400 font-bold">-150 pts</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- RIGHT TWO COLUMNS: SUSPECT MATRIX -->
+            <!-- Suspects Box -->
             <div class="lg:col-span-2 glass-panel rounded-lg p-5 flex flex-col justify-between z-10">
                 <div>
                     <div class="border-b border-gray-700 pb-2 mb-4">
                         <h3 class="text-sm font-bold tracking-wider uppercase text-emerald-400">Suspected Childs' Profiles</h3>
                     </div>
-                    <p id="game-feedback" class="text-sm text-amber-400 h-6 mb-6 font-semibold transition-all duration-300">
+                    <p id="game-feedback" class="text-xs md:text-sm text-amber-400 h-6 mb-6 font-semibold transition-all duration-300 font-mono-tech">
                         Scan the suspect DNA ladders to find the correct 50% marker alignment.
                     </p>
-
-                    <!-- Suspect Grid -->
-                    <div id="suspects-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Suspect cards generated dynamically here -->
-                    </div>
+                    <div id="suspects-container" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
                 </div>
-
-                <!-- Next Level Trigger -->
                 <div class="mt-8 flex justify-end">
-                    <button onclick="startNewCase()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold tracking-wider text-xs uppercase px-6 py-3 rounded border border-gray-600 transition-all active:scale-95">
-                        Generate Next Case
+                    <button onclick="skipCase()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold tracking-wider text-xs uppercase px-5 py-2.5 rounded border border-gray-600 transition-all active:scale-95">
+                        Emergency Redo
                     </button>
                 </div>
             </div>
-
         </div>
-    </main>
+    </section>
 
-    <!-- Footer -->
-    <footer class="text-center text-[10px] text-gray-600 font-mono mt-4 uppercase tracking-widest">
-        SYSTEM CONNECTION SECURE // TERMINAL REGION: OH-NORTHEAST
+    <!-- TAB 3: REPORTS LOG -->
+    <section id="page-reports" class="hidden max-w-7xl mx-auto w-full glass-panel rounded-xl p-6 flex-grow shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+            <h2 class="text-xl font-bold text-cyan-400">LABORATORY CASE RESOLUTION REPORT LOGS</h2>
+            <button onclick="clearReports()" class="text-xs bg-red-950/40 border border-red-900 text-red-400 px-3 py-1 rounded hover:bg-red-900 hover:text-white transition-all">Clear Logs</button>
+        </div>
+        <div class="bg-black/50 border border-gray-800 rounded-lg p-4 h-80 overflow-y-auto font-mono-tech space-y-2 text-xs" id="reports-log-container">
+            <div class="text-gray-500 italic">No case submissions committed to mainframe memory yet.</div>
+        </div>
+    </section>
+
+    <!-- TAB 4: SETTINGS -->
+    <section id="page-settings" class="hidden max-w-7xl mx-auto w-full glass-panel rounded-xl p-6 flex-grow shadow-2xl space-y-6">
+        <h2 class="text-xl font-bold text-cyan-400 border-b border-gray-700 pb-2">SYSTEM PREFERENCES</h2>
+        <div class="max-w-md space-y-4 font-mono-tech">
+            <div class="flex justify-between items-center bg-black/30 p-4 rounded border border-gray-800">
+                <div>
+                    <span class="block text-sm text-white">Instruction Override</span>
+                    <span class="block text-xs text-gray-400">Display directions on next app startup sequence</span>
+                </div>
+                <button onclick="localStorage.removeItem('dna_onboarded'); alert('Directions reset! Refresh page to see.')" class="bg-cyan-900/60 hover:bg-cyan-800 border border-cyan-700 px-3 py-1.5 rounded text-xs text-cyan-300">Reset Onboarding</button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="text-center text-[10px] text-gray-600 font-mono-tech mt-4 uppercase tracking-widest">
+        SYSTEM CONNECTION SECURE // TERMINAL CORE READY
     </footer>
 
     <script>
-        // Color palette mimicking the different gel colors from the image
-        const BAND_COLORS = [
-            'linear-gradient(90deg, #1e40af, #3b82f6)', // Bright Blue
-            'linear-gradient(90deg, #065f46, #10b981)', // Neon Green
-            'linear-gradient(90deg, #c2410c, #f97316)', // Vibrant Orange
-            'linear-gradient(90deg, #6b21a8, #a855f7)'  // Intense Purple
-        ];
+        const BAND_COLORS = ['#3b82f6', '#10b981', '#f97316', '#a855f7', '#ec4899', '#f59e0b'];
 
+        // Core Player Stats
         let gameScore = 0;
+        let totalCases = 0;
+        let correctCases = 0;
+        let currentStreak = 0;
+        let currentLevel = 1;
+
+        // Level Configuration Map
+        const LEVEL_CONFIGS = {
+            1: { time: 15, slots: 6, fatherBandsCount: 3 },
+            2: { time: 12, slots: 7, fatherBandsCount: 3 },
+            3: { time: 10, slots: 8, fatherBandsCount: 4 },
+            4: { time: 9,  slots: 9, fatherBandsCount: 4 },
+            5: { time: 8,  slots: 10, fatherBandsCount: 5 }
+        };
+        
         let fatherBands = [];
         let correctIndex = 0;
+        let currentCaseName = "";
 
-        function randomBandValue() {
-            return Math.floor(Math.random() * 12) + 1; // 12 distinct positions inside the gel
+        let countdownTimer = null;
+        let timeLeft = 15;
+        let maxTimeAllocated = 15;
+        let isTabActive = true; 
+        let isTimerFrozen = false;
+
+        window.onload = function() {
+            if (!localStorage.getItem('dna_onboarded')) {
+                document.getElementById('directions-modal').style.display = 'flex';
+            } else {
+                document.getElementById('directions-modal').style.display = 'none';
+                startNewCase();
+            }
+        };
+
+        function closeDirections() {
+            localStorage.setItem('dna_onboarded', 'true');
+            document.getElementById('directions-modal').style.display = 'none';
+            startNewCase();
+        }
+
+        function switchTab(targetTab) {
+            const tabs = ['home', 'cases', 'reports', 'settings'];
+            tabs.forEach(tab => {
+                document.getElementById(`page-${tab}`).classList.add('hidden');
+                document.getElementById(`tab-${tab}`).className = "hover:text-cyan-600 transition-colors";
+            });
+
+            document.getElementById(`page-${targetTab}`).classList.remove('hidden');
+            document.getElementById(`tab-${targetTab}`).className = "text-cyan-600 border-b-2 border-cyan-600 pb-1 font-bold";
+            
+            if (targetTab === 'cases') {
+                isTabActive = true;
+                setTimeout(drawConnectionLines, 80);
+            } else {
+                isTabActive = false;
+            }
+        }
+
+        function generateDnaStrandMarkup(color) {
+            return `
+                <div class="w-full flex items-center justify-between px-1 opacity-90 scale-95" style="color: ${color}">
+                    <div class="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style="background-color: ${color}"></div>
+                    <div class="h-[1px] flex-grow mx-1 border-t border-dashed" style="border-color: ${color}; opacity: 0.6;"></div>
+                    <div class="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style="background-color: ${color}"></div>
+                </div>
+            `;
         }
 
         function createGelLayout(bandPositions) {
-            // Generates an array of 12 rows where bands exist or stay empty
             let html = '';
-            for (let i = 1; i <= 12; i++) {
+            let currentConfig = LEVEL_CONFIGS[currentLevel] || LEVEL_CONFIGS[5];
+            
+            for (let i = 1; i <= currentConfig.slots; i++) {
                 if (bandPositions.includes(i)) {
-                    // Pick a distinct color variant based on the position row index
                     let color = BAND_COLORS[i % BAND_COLORS.length];
-                    html += `<div class="h-4 w-full rounded-sm opacity-90 shadow-[0_0_8px_rgba(255,255,255,0.2)]" style="background: ${color}"></div>`;
+                    html += generateDnaStrandMarkup(color);
                 } else {
-                    html += `<div class="h-4 w-full opacity-10 border-b border-gray-950/20"></div>`;
+                    html += `<div class="h-3 w-full flex items-center justify-center"><div class="w-10 h-[1px] bg-gray-900/40 border-t border-dashed border-gray-800/10"></div></div>`;
                 }
             }
             return html;
         }
 
-        function startNewCase() {
-            // Update UI strings to match a high tech log format
-            document.getElementById('case-id').innerText = `CASE: [REDACTED] 2026-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
-            document.getElementById('father-id').innerText = `ID: C-F-${Math.floor(Math.random() * 8999 + 1000)}`;
-            
-            const feedback = document.getElementById('game-feedback');
-            feedback.innerText = "Target bands locked. Compare alignment profiles below.";
-            feedback.className = "text-sm text-gray-400 h-6 mb-6 font-semibold";
+        function startTimer() {
+            clearInterval(countdownTimer);
+            let config = LEVEL_CONFIGS[currentLevel] || LEVEL_CONFIGS[5];
+            maxTimeAllocated = config.time;
+            timeLeft = maxTimeAllocated;
+            isTimerFrozen = false;
+            updateTimerDisplay();
 
-            // 1. Setup Control Father Bands (exactly 4 visual bands)
+            countdownTimer = setInterval(() => {
+                if (!isTabActive || isTimerFrozen) return; 
+
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const bar = document.getElementById('countdown-bar');
+            const txt = document.getElementById('timer-text');
+            if(!bar || !txt) return;
+
+            let percentage = (timeLeft / maxTimeAllocated) * 100;
+            bar.style.width = `${percentage}%`;
+            
+            if (isTimerFrozen) {
+                txt.innerText = `⏳ STABILIZER ACTIVE (${timeLeft}s)`;
+                bar.className = "h-full bg-blue-400 timer-transition shadow-[0_0_15px_rgba(96,165,250,0.8)]";
+                return;
+            }
+
+            txt.innerText = `${timeLeft}s REMAINING`;
+
+            if (timeLeft > (maxTimeAllocated / 2)) {
+                bar.className = "h-full bg-cyan-500 timer-transition shadow-[0_0_10px_rgba(6,182,212,0.5)]";
+            } else if (timeLeft > 3) {
+                bar.className = "h-full bg-amber-500 timer-transition shadow-[0_0_10px_rgba(245,158,11,0.5)]";
+            } else {
+                bar.className = "h-full bg-rose-600 timer-transition shadow-[0_0_10px_rgba(225,29,72,0.7)] animate-pulse";
+            }
+        }
+
+        /* STREAK & VISUAL ENGINE SYSTEM UPDATES */
+        function adjustStreakAndScoreUI(isReset) {
+            const streakBox = document.getElementById('streak-box');
+            const streakTxt = document.getElementById('streak-val');
+            const scoreBox = document.getElementById('score-box');
+            const scoreLabel = document.getElementById('score-label');
+
+            if (isReset) {
+                currentStreak = 0;
+                streakBox.className = "bg-gray-950 border border-gray-800 px-3 py-2 rounded text-center min-w-[70px]";
+                streakTxt.className = "text-base font-bold text-gray-600";
+                scoreBox.className = "bg-amber-500/10 border border-amber-500/40 px-4 py-2 rounded text-right transition-all";
+                scoreLabel.innerText = "SCORE";
+            } else {
+                currentStreak++;
+                let multiplier = Math.min(Math.floor(currentStreak / 3) + 1, 5);
+                
+                if (multiplier > 1) {
+                    streakBox.className = "bg-amber-950 border border-amber-500 px-3 py-2 rounded text-center min-w-[70px] animate-bounce";
+                    streakTxt.className = "text-base font-bold text-amber-400";
+                    scoreBox.className = "bg-orange-500/20 border border-orange-500 px-4 py-2 rounded text-right shadow-[0_0_15px_rgba(249,115,22,0.4)]";
+                    scoreLabel.innerText = `SCORE (x${multiplier})`;
+                } else {
+                    streakBox.className = "bg-gray-900 border border-gray-600 px-3 py-2 rounded text-center min-w-[70px]";
+                    streakTxt.className = "text-base font-bold text-white";
+                }
+            }
+            streakTxt.innerText = currentStreak;
+
+            // Simple level milestones (Every 3 successful cases unlocks the next level tier)
+            let targetedLvl = Math.min(Math.floor(correctCases / 3) + 1, 5);
+            if (targetedLvl !== currentLevel) {
+                currentLevel = targetedLvl;
+                document.getElementById('lvl-badge').innerText = currentLevel;
+            }
+        }
+
+        /* TOOLKIT METHOD MODULES */
+        function useEnzymeBurn() {
+            if (gameScore < 50) {
+                flashFeedback("INSUFFICIENT SCORE CHANNELS FOR ENZYME BURN", "text-red-400");
+                return;
+            }
+            gameScore -= 50;
+            document.getElementById('score-val').innerText = gameScore;
+            logReport(currentCaseName, "Skipped (Enzyme Burn)", "SKIPPED");
+            adjustStreakAndScoreUI(true); // Burn breaks streak chain
+            skipCase();
+        }
+
+        function useStabilizer() {
+            if (gameScore < 100) {
+                flashFeedback("INSUFFICIENT SCORE CHANNELS FOR STABILIZATION", "text-red-400");
+                return;
+            }
+            if (isTimerFrozen) return; 
+            gameScore -= 100;
+            document.getElementById('score-val').innerText = gameScore;
+            isTimerFrozen = true;
+            updateTimerDisplay();
+            
+            setTimeout(() => {
+                isTimerFrozen = false;
+                updateTimerDisplay();
+            }, 5000);
+        }
+
+        function useLocusIsolation() {
+            if (gameScore < 150) {
+                flashFeedback("INSUFFICIENT SCORE CHANNELS FOR LOCUS ISOLATION", "text-red-400");
+                return;
+            }
+            gameScore -= 150;
+            document.getElementById('score-val').innerText = gameScore;
+
+            let wrongIndices = [0, 1, 2].filter(idx => idx !== correctIndex);
+            let targetRemoval = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+            
+            const card = document.getElementById(`suspect-card-${targetRemoval}`);
+            if (card) {
+                card.style.opacity = "0.15";
+                card.style.pointerEvents = "none";
+                card.querySelector('.uppercase').innerText = "❌ CORRUPT VARIANT REMOVED";
+            }
+        }
+
+        function flashFeedback(msg, colorClass) {
+            const f = document.getElementById('game-feedback');
+            f.innerText = msg;
+            f.className = `text-xs md:text-sm h-6 mb-6 font-bold tracking-wide font-mono-tech ${colorClass}`;
+        }
+
+        function handleTimeOut() {
+            totalCases++;
+            if (gameScore > 0) gameScore -= 25;
+            document.getElementById('score-val').innerText = gameScore;
+            flashFeedback("CRITICAL: Sample degraded! Strand sequence collapsed.", "text-rose-500");
+            logReport(currentCaseName, "None (Expired)", "DEGRADED");
+            adjustStreakAndScoreUI(true);
+            updateGlobalStats();
+            setTimeout(startNewCase, 1500);
+        }
+
+        function skipCase() {
+            clearInterval(countdownTimer);
+            startNewCase();
+        }
+
+        function startNewCase() {
+            currentCaseName = `CASE: [REDACTED] 2026-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random()*90+10)}`;
+            document.getElementById('case-id').innerText = currentCaseName;
+            document.getElementById('father-id').innerText = `ID: C-F-${Math.floor(Math.random() * 8999 + 1000)}`;
+            flashFeedback(`Lvl ${currentLevel} Strands locked. Match exactly 2 matching rungs.`, "text-gray-400");
+
+            let currentConfig = LEVEL_CONFIGS[currentLevel] || LEVEL_CONFIGS[5];
+
             fatherBands = [];
-            while (fatherBands.length < 4) {
-                let pos = randomBandValue();
+            while (fatherBands.length < currentConfig.fatherBandsCount) {
+                let pos = Math.floor(Math.random() * currentConfig.slots) + 1;
                 if (!fatherBands.includes(pos)) fatherBands.push(pos);
             }
             fatherBands.sort((a,b)=>a-b);
             document.getElementById('father-gel').innerHTML = createGelLayout(fatherBands);
 
-            // 2. Setup 3 Potential Children (1 correct index)
             correctIndex = Math.floor(Math.random() * 3);
             const container = document.getElementById('suspects-container');
             container.innerHTML = '';
 
             for (let i = 0; i < 3; i++) {
                 let childBands = [];
-
                 if (i === correctIndex) {
-                    // Correct Match: Inherits exactly 2 bands from father, 2 are random mutations
+                    // Correct always gets exactly 2 matching rungs
                     let inherited = [...fatherBands].sort(() => 0.5 - Math.random()).slice(0, 2);
                     childBands = [...inherited];
-                    while (childBands.length < 4) {
-                        let randPos = randomBandValue();
-                        if (!fatherBands.includes(randPos) && !childBands.includes(randPos)) {
-                            childBands.push(randPos);
-                        }
+                    while (childBands.length < currentConfig.fatherBandsCount) {
+                        let randPos = Math.floor(Math.random() * currentConfig.slots) + 1;
+                        if (!fatherBands.includes(randPos) && !childBands.includes(randPos)) childBands.push(randPos);
                     }
                 } else {
-                    // Incorrect Match: Inherits only 1 band or 0 bands from the target father
-                    let inheritedCount = Math.floor(Math.random() * 2); // 0 or 1
+                    // Blunder profiles get 0, 1, or 3+ matches
+                    let inheritedCount = [0, 1, 3].sort(() => 0.5 - Math.random())[0];
                     let inherited = [...fatherBands].sort(() => 0.5 - Math.random()).slice(0, inheritedCount);
                     childBands = [...inherited];
-                    while (childBands.length < 4) {
-                        let randPos = randomBandValue();
-                        if (!fatherBands.includes(randPos) && !childBands.includes(randPos)) {
-                            childBands.push(randPos);
-                        }
+                    while (childBands.length < currentConfig.fatherBandsCount) {
+                        let randPos = Math.floor(Math.random() * currentConfig.slots) + 1;
+                        if (!fatherBands.includes(randPos) && !childBands.includes(randPos)) childBands.push(randPos);
                     }
                 }
                 childBands.sort((a,b)=>a-b);
 
-                // Build HTML Card elements matching layout specifications
                 container.innerHTML += `
-                    <div onclick="selectChild(${i})" class="group cursor-pointer bg-black/50 border border-gray-700 hover:border-cyan-500 rounded p-4 flex flex-col items-center transition-all duration-200 transform hover:-translate-y-1 shadow-lg">
-                        <div class="w-full border-b border-gray-800 pb-2 mb-3 flex justify-between text-[11px] font-mono text-gray-500 group-hover:text-cyan-400">
-                            <span>SUSPECT CHILD ${i + 1}</span>
-                            <span>ID: S-C-990${i}</span>
+                    <div id="suspect-card-${i}" onclick="selectChild(${i})" class="group cursor-pointer bg-black/40 border border-gray-800 hover:border-cyan-500 rounded p-4 flex flex-col items-center transition-all duration-200 transform hover:-translate-y-1 shadow-md">
+                        <div class="w-full border-b border-gray-800 pb-1.5 mb-3 flex justify-between text-[10px] font-mono-tech text-gray-500 group-hover:text-cyan-400">
+                            <span>SUSPECT OFFSPRING 0${i + 1}</span>
+                            <span>ID: S-C-${Math.floor(Math.random()*800+100)}</span>
                         </div>
-                        <div class="w-24 bg-black border border-gray-800 rounded p-1.5 h-72 flex flex-col justify-around shadow-inner">
+                        <div class="w-28 bg-gray-950 border border-gray-900 rounded p-2 h-48 flex flex-col justify-between shadow-inner">
                             ${createGelLayout(childBands)}
                         </div>
-                        <div class="mt-4 w-full bg-gray-800/50 group-hover:bg-cyan-950/40 text-center py-1.5 rounded border border-gray-700 group-hover:border-cyan-800/60 transition-all">
-                            <span class="text-[10px] font-bold tracking-wider text-gray-400 group-hover:text-cyan-300 uppercase">MATCH RATIO?</span>
+                        <div class="mt-4 w-full bg-gray-900/60 group-hover:bg-cyan-950/40 text-center py-1.5 rounded border border-gray-800 group-hover:border-cyan-900 transition-all">
+                            <span class="text-[10px] font-bold tracking-wider text-gray-500 group-hover:text-cyan-300 uppercase">RUN COMPARISON TEST</span>
                         </div>
                     </div>
                 `;
             }
-            
-            // Clean/redraw connection visual canvas paths if window sizes match
             setTimeout(drawConnectionLines, 100);
+            startTimer();
         }
 
         function selectChild(index) {
-            const feedback = document.getElementById('game-feedback');
+            clearInterval(countdownTimer);
+            totalCases++;
+            
+            let status = "";
             if (index === correctIndex) {
-                gameScore += 200;
+                let multiplier = Math.min(Math.floor(currentStreak / 3) + 1, 5);
+                let pointPayout = 200 * multiplier;
+                
+                gameScore += pointPayout;
+                correctCases++;
+                status = "SUCCESS";
                 document.getElementById('score-val').innerText = gameScore;
-                feedback.innerText = "BAND MATCH FOUND! Lineage Level Confirmed. (+200 Score)";
-                feedback.className = "text-sm text-emerald-400 h-6 mb-6 font-bold tracking-wide animate-pulse";
-                setTimeout(startNewCase, 1500);
+                flashFeedback(`ACCURATE VERDICT! (+${pointPayout} Exp)`, "text-emerald-400");
+                adjustStreakAndScoreUI(false);
+                setTimeout(startNewCase, 1200);
             } else {
                 if (gameScore > 0) gameScore -= 50;
+                status = "FAILED";
                 document.getElementById('score-val').innerText = gameScore;
-                feedback.innerText = "ALIGNMENT ERROR: False positive variant. Match metrics failed.";
-                feedback.className = "text-sm text-rose-500 h-6 mb-6 font-bold tracking-wide";
+                flashFeedback("CRITICAL ERROR: Mismatch flagged! (-50 Exp)", "text-rose-400");
+                adjustStreakAndScoreUI(true);
+                setTimeout(startNewCase, 1200);
             }
+
+            logReport(currentCaseName, `Suspect Child 0${index + 1}`, status);
+            updateGlobalStats();
+        }
+
+        function logReport(caseId, selection, status) {
+            const container = document.getElementById('reports-log-container');
+            if (totalCases === 1) container.innerHTML = '';
+            
+            let badgeColor = "bg-emerald-950 text-emerald-400 border-emerald-800";
+            if (status === "FAILED") badgeColor = "bg-red-950 text-red-400 border-red-900";
+            if (status === "DEGRADED") badgeColor = "bg-amber-950 text-amber-500 border-amber-900";
+            if (status === "SKIPPED") badgeColor = "bg-gray-950 text-gray-400 border-gray-800";
+            
+            const logEntry = `
+                <div class="p-2.5 bg-gray-900/80 rounded border border-gray-800 flex justify-between items-center">
+                    <div>
+                        <span class="text-white font-bold">${caseId}</span> — Verdict: <span class="text-cyan-400">${selection}</span>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] uppercase tracking-widest rounded border font-bold ${badgeColor}">${status}</span>
+                </div>
+            `;
+            container.innerHTML = logEntry + container.innerHTML;
+        }
+
+        function updateGlobalStats() {
+            document.getElementById('home-total-cases').innerText = totalCases;
+            const accuracy = totalCases > 0 ? Math.round((correctCases / totalCases) * 100) : 0;
+            document.getElementById('home-accuracy').innerText = `${accuracy}%`;
+
+            // Ranks assigned on Overview Screen based on highest unlocked level
+            const rankBadge = document.getElementById('home-rank');
+            if (currentLevel === 1) rankBadge.innerText = "JUNIOR TECH (LVL 1)";
+            else if (currentLevel === 2) rankBadge.innerText = "FORENSIC ANALYST (LVL 2)";
+            else if (currentLevel === 3) rankBadge.innerText = "SENIOR GENETICIST (LVL 3)";
+            else if (currentLevel === 4) rankBadge.innerText = "CHIEF INVESTIGATOR (LVL 4)";
+            else rankBadge.innerText = "LABORATORY DIRECTOR (LVL 5)";
+        }
+
+        function clearReports() {
+            document.getElementById('reports-log-container').innerHTML = `<div class="text-gray-500 italic">No case submissions committed to mainframe memory yet.</div>`;
+            totalCases = 0;
+            correctCases = 0;
+            currentLevel = 1;
+            adjustStreakAndScoreUI(true);
+            updateGlobalStats();
+            document.getElementById('lvl-badge').innerText = "1";
         }
 
         function drawConnectionLines() {
             const canvas = document.getElementById('lineCanvas');
-            if (!canvas) return;
+            if (!canvas || canvas.parentElement.clientWidth === 0) return;
             const ctx = canvas.getContext('2d');
             
-            // Clear current viewport maps
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Find visual components 
             const fatherGel = document.getElementById('father-gel');
             const targetContainer = document.getElementById('suspects-container');
             if (!fatherGel || !targetContainer) return;
@@ -246,22 +616,21 @@
             const fBounds = fatherGel.getBoundingClientRect();
             const pBounds = canvas.getBoundingClientRect();
 
-            // Setup a stylish glowing path configuration
-            ctx.strokeStyle = 'rgba(16, 185, 129, 0.15)';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+            ctx.lineWidth = 1.5;
 
-            // Draw clean diagnostic wires running from center right side of control window across the dashboard
             let startX = fBounds.right - pBounds.left;
             let startY = fBounds.top - pBounds.top + (fBounds.height / 2);
             let endX = targetContainer.getBoundingClientRect().left - pBounds.left;
 
             ctx.beginPath();
             ctx.moveTo(startX, startY);
-            ctx.bezierCurveTo(startX + 100, startY, endX - 100, startY + 50, endX, startY + 20);
+            ctx.lineTo(startX + 40, startY);
+            ctx.lineTo(endX - 40, startY + 40);
+            ctx.lineTo(endX, startY + 40);
             ctx.stroke();
         }
 
-        window.onload = startNewCase;
         window.onresize = drawConnectionLines;
     </script>
 </body>
